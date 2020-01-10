@@ -88,14 +88,16 @@ int main(int argc, char *argv[])
     gettimeofday(&start, NULL);
 
     int read_bytes = 0;
+    int read_count = 0;
     for ( ; ; ) {
         if (has_alarm) {
             has_alarm = 0;
             struct timeval now, elapse;
             gettimeofday(&now, NULL);
             timersub(&now, &start, &elapse);
-            fprintf(stderr, "%ld.%06ld %.3f MB\n", elapse.tv_sec, elapse.tv_usec, read_bytes/1024.0/1024.0);
+            fprintf(stderr, "%ld.%06ld %.3f MB %d\n", elapse.tv_sec, elapse.tv_usec, read_bytes/1024.0/1024.0, read_count);
             read_bytes = 0;
+            read_count = 0;
         }
         int n = read(sockfd, buf, bufsize);
         if (n < 0) {
@@ -107,6 +109,7 @@ int main(int argc, char *argv[])
             }
         }
         read_bytes += n;
+        read_count ++;
     }
 
     return 0;
