@@ -57,12 +57,12 @@ int main(int argc, char *argv[])
                 break;
         }
     }
-    if (argc != 2) {
+    argc -= optind;
+    argv += optind;
+    if (argc != 1) {
         usage();
         exit(1);
     }
-    argc -= optind;
-    argv += optind;
 
     char *ip_address = argv[0];
 
