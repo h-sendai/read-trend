@@ -47,7 +47,7 @@ int print_pid()
 
 int main(int argc, char *argv[])
 {
-    int rcvbuf __attribute__((unused)) = 0;
+    int rcvbuf   = 0;
     int bufsize  = 1*1024*1024;
     int port     = 24;
     int interval = 1;
@@ -109,6 +109,12 @@ int main(int argc, char *argv[])
         errx(1, "tcp_socket()");
     }
 
+    if (rcvbuf > 0) {
+        if (set_so_rcvbuf(sockfd, rcvbuf) < 0) {
+            errx(1,  "set_so_rcvbuf");
+        }
+    }
+    
     if (connect_tcp(sockfd, ip_address, port) < 0) {
         errx(1, "tcp_connect");
     }

@@ -129,6 +129,13 @@ int set_so_rcvbuf(int sockfd, int so_rcvbuf)
     }
 
     ret_so_rcvbuf = get_so_rcvbuf(sockfd);
+#ifdef __linux__
+    if (ret_so_rcvbuf != (2*so_rcvbuf)) {
+#else
+    if (ret_so_rcvbuf != so_rcvbuf) {
+#endif
+        warnx("cannot set to %d bytes, but set %d bytes", so_rcvbuf, ret_so_rcvbuf);
+    }
 
     return ret_so_rcvbuf;
 }
