@@ -18,6 +18,7 @@
 #include "get_num.h"
 
 volatile sig_atomic_t has_alarm = 0;
+volatile sig_atomic_t has_int   = 0;
 
 int usage(void)
 {
@@ -34,6 +35,12 @@ int usage(void)
 void sig_alrm(int signo)
 {
     has_alarm = 1;
+    return;
+}
+
+void sig_int(int signo)
+{
+    has_int = 1;
     return;
 }
 
@@ -97,6 +104,7 @@ int main(int argc, char *argv[])
     }
 
     my_signal(SIGALRM, sig_alrm);
+    my_signal(SIGINT,  sig_int);
 
     buf = malloc(bufsize);
     if (buf == NULL) {
@@ -135,6 +143,13 @@ int main(int argc, char *argv[])
             read_bytes = 0;
             read_count = 0;
         }
+        if (has_int) {
+            if (close(sockfd) < 0) {
+                err(1, "close");
+            }
+            exit(0);
+        }
+
         int n = read(sockfd, buf, bufsize);
         if (n < 0) {
             if (errno == EINTR) {
