@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
     }
 
     my_signal(SIGALRM, sig_alrm);
-    my_signal(SIGINT,  sig_int);
+    // my_signal(SIGINT,  sig_int);
 
     buf = malloc(bufsize);
     if (buf == NULL) {
@@ -143,12 +143,12 @@ int main(int argc, char *argv[])
             read_bytes = 0;
             read_count = 0;
         }
-        if (has_int) {
-            if (close(sockfd) < 0) {
-                err(1, "close");
-            }
-            exit(0);
-        }
+        // if (has_int) {
+        //     if (close(sockfd) < 0) {
+        //         err(1, "close");
+        //     }
+        //     exit(0);
+        // }
 
         int n = read(sockfd, buf, bufsize);
         if (n < 0) {
