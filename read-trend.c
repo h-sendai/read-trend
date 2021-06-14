@@ -22,11 +22,16 @@ volatile sig_atomic_t has_int   = 0;
 
 int usage(void)
 {
-    char msg[] = "Usage: ./read-trend [-p port] [-b bufsize] [-i interval] ip_address\n"
+    char msg[] = "Usage: ./read-trend [-c cpu_num] [-P] [-p port] [-r rcvbuf] [-b bufsize] [-i interval] ip_address\n"
                  "default: port 24, read bufsize 1024kB, interval 1 second\n"
                  "suffix k for kilo, m for mega to speficy bufsize\n"
-                 "socket rcvbufsize is not implemented yet";
-    // not yet [-r socket_rcvbufsize] 
+                 "Options\n"
+                 "-c cpu_num: set cpu number to be run\n"
+                 "-P print pid\n"
+                 "-p port\n port number\n"
+                 "-r rcvbuf: set socket receive buffer size\n"
+                 "-b bufsize: read() buffer size (default: 1024kB)\n"
+                 "-i sec: print interval (integer seconds)\n";
     fprintf(stderr, "%s\n", msg);
 
     return 0;
