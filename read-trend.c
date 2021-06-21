@@ -22,9 +22,10 @@ volatile sig_atomic_t has_int   = 0;
 
 int usage(void)
 {
-    char msg[] = "Usage: ./read-trend [-c cpu_num] [-P] [-p port] [-r rcvbuf] [-b bufsize] [-i interval] ip_address\n"
+    char msg[] = "Usage: ./read-trend [-c cpu_num] [-P] [-p port] [-r rcvbuf] [-b bufsize] [-i interval] ip_address[:port]\n"
                  "default: port 24, read bufsize 1024kB, interval 1 second\n"
                  "suffix k for kilo, m for mega to speficy bufsize\n"
+                 "If both -p port and ip_address:port are specified, ip_address:port port wins\n"
                  "Options\n"
                  "-c cpu_num: set cpu number to be run\n"
                  "-P print pid\n"
@@ -99,7 +100,12 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    char *ip_address = argv[0];
+    char *remote_host_info = argv[0];
+    char *tmp = strdup(remote_host_info);
+    char *remote_host = strsep(&tmp, ":");
+    if (tmp != NULL) {
+        port = strtol(tmp, NULL, 0);
+    }
 
     if (cpu_num != -1) {
         if (set_cpu(cpu_num) < 0) {
@@ -128,7 +134,7 @@ int main(int argc, char *argv[])
         }
     }
     
-    if (connect_tcp(sockfd, ip_address, port) < 0) {
+    if (connect_tcp(sockfd, remote_host, port) < 0) {
         errx(1, "tcp_connect");
     }
 
