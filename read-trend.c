@@ -115,7 +115,8 @@ int main(int argc, char *argv[])
     }
 
     my_signal(SIGALRM, sig_alrm);
-    // my_signal(SIGINT,  sig_int);
+    my_signal(SIGINT,  sig_int);
+    my_signal(SIGTERM, sig_int);
 
     buf = malloc(bufsize);
     if (buf == NULL) {
@@ -138,28 +139,38 @@ int main(int argc, char *argv[])
         errx(1, "tcp_connect");
     }
 
+    long read_bytes = 0;
+    long read_count = 0;
+    long total_bytes = 0;
+
     set_timer(interval, 0, interval, 0);
     struct timeval start;
     gettimeofday(&start, NULL);
 
-    long read_bytes = 0;
-    long read_count = 0;
     for ( ; ; ) {
         if (has_alarm) {
             has_alarm = 0;
             struct timeval now, elapse;
             gettimeofday(&now, NULL);
             timersub(&now, &start, &elapse);
-            fprintf(stderr, "%ld.%06ld %.3f MB %ld\n", elapse.tv_sec, elapse.tv_usec, read_bytes/1024.0/1024.0, read_count);
+            //fprintf(stderr, "%ld.%06ld %.3f MB %ld\n", elapse.tv_sec, elapse.tv_usec, read_bytes/1024.0/1024.0, read_count);
+            printf("%ld.%06ld %.3f MB %ld\n", elapse.tv_sec, elapse.tv_usec, read_bytes/1024.0/1024.0, read_count);
+            fflush(stdout);
             read_bytes = 0;
             read_count = 0;
         }
-        // if (has_int) {
-        //     if (close(sockfd) < 0) {
-        //         err(1, "close");
-        //     }
-        //     exit(0);
-        // }
+        if (has_int) {
+            if (close(sockfd) < 0) {
+                err(1, "close");
+            }
+            struct timeval now, elapse;
+            gettimeofday(&now, NULL);
+            timersub(&now, &start, &elapse);
+            double run_time_sec = elapse.tv_sec + 0.000001*elapse.tv_usec;
+            fprintf(stderr, "run_sec: %.3f seconds total_bytes: %ld bytes transfer_rate: %.3f MB/s\n",
+                run_time_sec, total_bytes, total_bytes / run_time_sec / 1024.0 / 1024.0);
+            exit(0);
+        }
 
         int n = read(sockfd, buf, bufsize);
         if (n < 0) {
@@ -170,7 +181,8 @@ int main(int argc, char *argv[])
                 err(1, "read socket");
             }
         }
-        read_bytes += n;
+        read_bytes  += n;
+        total_bytes += n;
         read_count ++;
     }
 
