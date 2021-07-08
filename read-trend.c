@@ -22,7 +22,7 @@ volatile sig_atomic_t has_int   = 0;
 
 int usage(void)
 {
-    char msg[] = "Usage: ./read-trend [-c cpu_num] [-P] [-p port] [-r rcvbuf] [-b bufsize] [-i interval] ip_address[:port]\n"
+    char msg[] = "Usage: ./read-trend [-c cpu_num] [-P] [-p port] [-q] [-r rcvbuf] [-b bufsize] [-i interval] ip_address[:port]\n"
                  "default: port 24, read bufsize 1024kB, interval 1 second\n"
                  "suffix k for kilo, m for mega to speficy bufsize\n"
                  "If both -p port and ip_address:port are specified, ip_address:port port wins\n"
@@ -30,6 +30,7 @@ int usage(void)
                  "-c cpu_num: set cpu number to be run\n"
                  "-P print pid\n"
                  "-p port\n port number\n"
+                 "-q enable quickack\n"
                  "-r rcvbuf: set socket receive buffer size\n"
                  "-b bufsize: read() buffer size (default: 1024kB)\n"
                  "-i sec: print interval (integer seconds)\n";
@@ -66,9 +67,10 @@ int main(int argc, char *argv[])
     int interval = 1;
     char *buf    = NULL;
     int cpu_num  = -1;
+    int enable_quickack = 0;
 
     int c;
-    while ( (c = getopt(argc, argv, "c:hPp:r:b:")) != -1) {
+    while ( (c = getopt(argc, argv, "c:hPp:qr:b:")) != -1) {
         switch (c) {
             case 'h':
                 usage();
@@ -82,6 +84,9 @@ int main(int argc, char *argv[])
                 break;
             case 'p':
                 port = strtol(optarg, NULL, 0);
+                break;
+            case 'q':
+                enable_quickack = 1;
                 break;
             case 'r':
                 rcvbuf = get_num(optarg);
@@ -137,6 +142,10 @@ int main(int argc, char *argv[])
     
     if (connect_tcp(sockfd, remote_host, port) < 0) {
         errx(1, "tcp_connect");
+    }
+
+    if (enable_quickack) {
+        set_so_quickack(sockfd);
     }
 
     long read_bytes = 0;
