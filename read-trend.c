@@ -187,6 +187,10 @@ int main(int argc, char *argv[])
             exit(0);
         }
 
+        if (enable_quickack) {
+            set_so_quickack(sockfd);
+        }
+
         int n = read(sockfd, buf, bufsize);
         if (n < 0) {
             if (errno == EINTR) {
