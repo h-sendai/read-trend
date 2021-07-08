@@ -20,14 +20,17 @@
 volatile sig_atomic_t has_alarm = 0;
 volatile sig_atomic_t has_int   = 0;
 
+int debug = 0;
+
 int usage(void)
 {
-    char msg[] = "Usage: ./read-trend [-c cpu_num] [-P] [-p port] [-q] [-r rcvbuf] [-b bufsize] [-i interval] ip_address[:port]\n"
+    char msg[] = "Usage: ./read-trend [-c cpu_num] [-d] [-P] [-p port] [-q] [-r rcvbuf] [-b bufsize] [-i interval] ip_address[:port]\n"
                  "default: port 24, read bufsize 1024kB, interval 1 second\n"
                  "suffix k for kilo, m for mega to speficy bufsize\n"
                  "If both -p port and ip_address:port are specified, ip_address:port port wins\n"
                  "Options\n"
                  "-c cpu_num: set cpu number to be run\n"
+                 "-d debug\n"
                  "-P print pid\n"
                  "-p port\n port number\n"
                  "-q enable quickack\n"
@@ -70,7 +73,7 @@ int main(int argc, char *argv[])
     int enable_quickack = 0;
 
     int c;
-    while ( (c = getopt(argc, argv, "c:hPp:qr:b:")) != -1) {
+    while ( (c = getopt(argc, argv, "c:dhPp:qr:b:")) != -1) {
         switch (c) {
             case 'h':
                 usage();
@@ -78,6 +81,9 @@ int main(int argc, char *argv[])
                 break;
             case 'c':
                 cpu_num = get_num(optarg);
+                break;
+            case 'd':
+                debug += 1;
                 break;
             case 'P':
                 print_pid();
