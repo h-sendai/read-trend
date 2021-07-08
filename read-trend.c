@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
                 port = strtol(optarg, NULL, 0);
                 break;
             case 'q':
-                enable_quickack = 1;
+                enable_quickack += 1;
                 break;
             case 'r':
                 rcvbuf = get_num(optarg);
@@ -150,6 +150,7 @@ int main(int argc, char *argv[])
         errx(1, "tcp_connect");
     }
 
+    fprintf(stderr, "enable_quickack: %d\n", enable_quickack);
     if (enable_quickack) {
         set_so_quickack(sockfd);
     }
@@ -187,7 +188,7 @@ int main(int argc, char *argv[])
             exit(0);
         }
 
-        if (enable_quickack) {
+        if (enable_quickack > 1) {
             set_so_quickack(sockfd);
         }
 
