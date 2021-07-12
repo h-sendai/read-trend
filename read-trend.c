@@ -151,7 +151,9 @@ int main(int argc, char *argv[])
         errx(1, "tcp_connect");
     }
 
-    fprintf(stderr, "enable_quickack: %d\n", enable_quickack);
+    if (debug) {
+        fprintf(stderr, "enable_quickack: %d\n", enable_quickack);
+    }
     if (enable_quickack) {
         set_so_quickack(sockfd);
     }
@@ -196,6 +198,9 @@ int main(int argc, char *argv[])
         int n = read(sockfd, buf, bufsize);
         if (n < 0) {
             if (errno == EINTR) {
+                if (debug) {
+                    fprintf(stderr, "EINTR\n");
+                }
                 continue;
             }
             else {
