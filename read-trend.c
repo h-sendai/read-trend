@@ -158,9 +158,9 @@ int main(int argc, char *argv[])
         set_so_quickack(sockfd);
     }
 
-    long read_bytes = 0;
-    long read_count = 0;
-    long total_bytes = 0;
+    long interval_read_bytes = 0;
+    long total_bytes         = 0;
+    long interval_read_count = 0;
 
     set_timer(interval, 0, interval, 0);
     struct timeval start;
@@ -173,10 +173,13 @@ int main(int argc, char *argv[])
             gettimeofday(&now, NULL);
             timersub(&now, &start, &elapse);
             //fprintf(stderr, "%ld.%06ld %.3f MB %ld\n", elapse.tv_sec, elapse.tv_usec, read_bytes/1024.0/1024.0, read_count);
-            printf("%ld.%06ld %.3f MB %ld\n", elapse.tv_sec, elapse.tv_usec, read_bytes/1024.0/1024.0, read_count);
+            printf("%ld.%06ld %.3f MB %ld\n",
+                elapse.tv_sec, elapse.tv_usec, 
+                interval_read_bytes/1024.0/1024.0,
+                interval_read_count);
             fflush(stdout);
-            read_bytes = 0;
-            read_count = 0;
+            interval_read_bytes = 0;
+            interval_read_count = 0;
         }
         if (has_int) {
             if (close(sockfd) < 0) {
@@ -207,9 +210,9 @@ int main(int argc, char *argv[])
                 err(1, "read socket");
             }
         }
-        read_bytes  += n;
-        total_bytes += n;
-        read_count ++;
+        interval_read_bytes += n;
+        total_bytes         += n;
+        interval_read_count ++;
     }
 
     return 0;
