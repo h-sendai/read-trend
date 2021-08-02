@@ -37,7 +37,7 @@ int usage(void)
                  "-q -q: enable quickack after connect() and before every read()\n"
                  "-r rcvbuf: set socket receive buffer size\n"
                  "-b bufsize: read() buffer size (default: 1024kB)\n"
-                 "-i sec: print interval (integer seconds)\n";
+                 "-i sec: print interval (seconds. allow decimal)\n";
     fprintf(stderr, "%s\n", msg);
 
     return 0;
@@ -68,13 +68,13 @@ int main(int argc, char *argv[])
     int rcvbuf   = 0;
     int bufsize  = 1*1024*1024;
     int port     = 24;
-    int interval = 1;
     char *buf    = NULL;
     int cpu_num  = -1;
     int enable_quickack = 0;
+    char *interval_sec_str = "1.0";
 
     int c;
-    while ( (c = getopt(argc, argv, "c:dhPp:qr:b:")) != -1) {
+    while ( (c = getopt(argc, argv, "c:dhi:Pp:qr:b:")) != -1) {
         switch (c) {
             case 'h':
                 usage();
@@ -85,6 +85,9 @@ int main(int argc, char *argv[])
                 break;
             case 'd':
                 debug += 1;
+                break;
+            case 'i':
+                interval_sec_str = optarg;
                 break;
             case 'P':
                 print_pid();
@@ -162,9 +165,13 @@ int main(int argc, char *argv[])
     long total_bytes         = 0;
     long interval_read_count = 0;
 
-    set_timer(interval, 0, interval, 0);
-    struct timeval start;
+    struct timeval interval;
+    conv_str2timeval(interval_sec_str, &interval);
+    set_timer(interval.tv_sec, interval.tv_usec, interval.tv_sec, interval.tv_usec);
+
+    struct timeval start, prev;
     gettimeofday(&start, NULL);
+    prev = start;
 
     for ( ; ; ) {
         if (has_alarm) {
@@ -172,14 +179,17 @@ int main(int argc, char *argv[])
             struct timeval now, elapse;
             gettimeofday(&now, NULL);
             timersub(&now, &start, &elapse);
-            //fprintf(stderr, "%ld.%06ld %.3f MB %ld\n", elapse.tv_sec, elapse.tv_usec, read_bytes/1024.0/1024.0, read_count);
-            printf("%ld.%06ld %.3f MB %ld\n",
+            timersub(&now, &prev,  &interval);
+            double interval_sec = interval.tv_sec + 0.000001*interval.tv_usec;
+            double transfer_rate_MB_s = interval_read_bytes / interval_sec / 1024.0 / 1024.0;
+            printf("%ld.%06ld %.3f MB/s %ld\n",
                 elapse.tv_sec, elapse.tv_usec, 
-                interval_read_bytes/1024.0/1024.0,
+                transfer_rate_MB_s,
                 interval_read_count);
             fflush(stdout);
             interval_read_bytes = 0;
             interval_read_count = 0;
+            prev = now;
         }
         if (has_int) {
             if (close(sockfd) < 0) {
