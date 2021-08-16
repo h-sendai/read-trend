@@ -182,9 +182,11 @@ int main(int argc, char *argv[])
             timersub(&now, &prev,  &interval);
             double interval_sec = interval.tv_sec + 0.000001*interval.tv_usec;
             double transfer_rate_MB_s = interval_read_bytes / interval_sec / 1024.0 / 1024.0;
-            printf("%ld.%06ld %.3f MB/s %ld\n",
+            double transfer_rate_Gb_s = MiB2Gb(transfer_rate_MB_s);
+            printf("%ld.%06ld %.3f MB/s %.3f Gbps %ld\n",
                 elapse.tv_sec, elapse.tv_usec, 
                 transfer_rate_MB_s,
+                transfer_rate_Gb_s,
                 interval_read_count);
             fflush(stdout);
             interval_read_bytes = 0;
@@ -199,8 +201,10 @@ int main(int argc, char *argv[])
             gettimeofday(&now, NULL);
             timersub(&now, &start, &elapse);
             double run_time_sec = elapse.tv_sec + 0.000001*elapse.tv_usec;
-            fprintf(stderr, "run_sec: %.3f seconds total_bytes: %ld bytes transfer_rate: %.3f MB/s\n",
-                run_time_sec, total_bytes, total_bytes / run_time_sec / 1024.0 / 1024.0);
+            double transfer_rate_MB_s = total_bytes / run_time_sec / 1024.0 / 1024.0;
+            double transfer_rate_Gb_s = MiB2Gb(transfer_rate_MB_s);
+            fprintf(stderr, "run_sec: %.3f seconds total_bytes: %ld bytes transfer_rate: %.3f MB/s %.3f Gbps\n",
+                run_time_sec, total_bytes, transfer_rate_MB_s, transfer_rate_Gb_s);
             exit(0);
         }
 
