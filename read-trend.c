@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
         interval_read_count ++;
 
         if (strlen(output)) {
-            int m = fwrite(buf, 1, n, stdout);
+            int m = fwrite(buf, 1, n, fp);
             if (m == 0) {
                 if (ferror(fp)) {
                     err(1, "fwrite");
