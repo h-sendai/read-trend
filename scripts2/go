@@ -1,0 +1,9 @@
+#!/bin/zsh
+
+# sample script to run read-trend and read /proc/stat to get cpu usage
+
+mpstat -P ALL 1 > mpstat.log &
+sleep 10
+taskset -c 5 timeout 100.1 ../read-trend 192.168.10.10:24 > run.log
+sleep 10
+pkill -f mpstat

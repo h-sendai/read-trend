@@ -1,0 +1,11 @@
+#!/bin/sh
+
+gnuplot <<EOF
+set term pngcairo size 800,600
+set output 'prog.png'
+set yrange [0:12]
+set ytics 0,1
+set xlabel 'sec'
+set ylabel 'Gbps'
+plot 'run.log' u 1:4 w lp title 'Transfer rate (Gbps)'
+EOF

@@ -1,0 +1,41 @@
+#!/bin/zsh
+
+# split each cpu lines
+# output
+# epalsed_seconds usr sys irq softirq
+
+plot()
+{
+    local cpu_num
+    cpu_num=$1
+    gnuplot <<EOF
+set term pngcairo size 800,600
+set output "cpu-$cpu_num.png"
+set xlabel 'sec'
+set ylabel 'cpu %'
+set title "CPU # $cpu_num"
+set yrange [0:100]
+plot \
+"$cpu_num" u 1:5 w lp title 'softirq',\
+"$cpu_num" u 1:4 w lp title 'irq',\
+"$cpu_num" u 1:3 w lp title 'sys',\
+"$cpu_num" u 1:2 w lp title 'usr'
+EOF
+}
+
+setopt extendedglob
+setopt shwordsplit
+
+log=mpstat.log
+n_cpu=$(($(nproc)-1))
+echo $n_cpu
+for i in {0..$n_cpu}; do
+    # mpstat format
+    # 13:09:38     CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+    grep "     $i" $log | awk '{print $3, $5, $7, $8}' | cat -n > $i
+done
+
+# plot
+for i in {0..$n_cpu}; do
+    plot $i
+done
