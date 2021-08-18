@@ -24,7 +24,7 @@ int debug = 0;
 
 int usage(void)
 {
-    char msg[] = "Usage: ./read-trend [-c cpu_num] [-d] [-P] [-p port] [-q] [-q ...] [-r rcvbuf] [-b bufsize] [-i interval] ip_address[:port]\n"
+    char msg[] = "Usage: ./read-trend [-c cpu_num] [-d] [-P] [-p port] [-q] [-q ...] [-r rcvbuf] [-b bufsize] [-i interval] [-o output_file] ip_address[:port]\n"
                  "default: port 24, read bufsize 1024kB, interval 1 second\n"
                  "suffix k for kilo, m for mega to speficy bufsize\n"
                  "If both -p port and ip_address:port are specified, ip_address:port port wins\n"
@@ -72,9 +72,10 @@ int main(int argc, char *argv[])
     int cpu_num  = -1;
     int enable_quickack = 0;
     char *interval_sec_str = "1.0";
+    char *output = "";
 
     int c;
-    while ( (c = getopt(argc, argv, "c:dhi:Pp:qr:b:")) != -1) {
+    while ( (c = getopt(argc, argv, "c:dhi:o:Pp:qr:b:")) != -1) {
         switch (c) {
             case 'h':
                 usage();
@@ -88,6 +89,9 @@ int main(int argc, char *argv[])
                 break;
             case 'i':
                 interval_sec_str = optarg;
+                break;
+            case 'o':
+                output = optarg;
                 break;
             case 'P':
                 print_pid();
@@ -126,6 +130,14 @@ int main(int argc, char *argv[])
         if (set_cpu(cpu_num) < 0) {
             fprintf(stderr, "set_cpu: %d fail\n", cpu_num);
             exit(1);
+        }
+    }
+
+    FILE *fp = NULL;
+    if (strlen(output)) {
+        fp = fopen(output, "w");
+        if (fp == NULL) {
+            err(1, "fopen for %s", output);
         }
     }
 
@@ -227,6 +239,19 @@ int main(int argc, char *argv[])
         interval_read_bytes += n;
         total_bytes         += n;
         interval_read_count ++;
+
+        if (strlen(output)) {
+            int m = fwrite(buf, 1, n, stdout);
+            if (m == 0) {
+                if (ferror(fp)) {
+                    err(1, "fwrite");
+                }
+                else {
+                    fprintf(stderr, "unknown error for fwrite\n");
+                    exit(0);
+                }
+            }
+        }
     }
 
     return 0;
