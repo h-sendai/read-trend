@@ -168,6 +168,8 @@ int main(int argc, char *argv[])
 
     if (debug) {
         fprintf(stderr, "enable_quickack: %d\n", enable_quickack);
+        int my_port = get_port_num(sockfd);
+        fprintf(stderr, "my_port: %d\n", my_port);
     }
     if (enable_quickack) {
         set_so_quickack(sockfd);
