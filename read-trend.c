@@ -24,7 +24,7 @@ int debug = 0;
 
 int usage(void)
 {
-    char msg[] = "Usage: ./read-trend [-c cpu_num] [-d] [-P] [-p port] [-q] [-q ...] [-r rcvbuf] [-b bufsize] [-i interval] [-o output_file] ip_address[:port]\n"
+    char msg[] = "Usage: ./read-trend [-c cpu_num] [-d] [-P] [-p port] [-q] [-q ...] [-r rcvbuf] [-b bufsize] [-i interval] [-o output_file] [-s sleep_usec] ip_address[:port]\n"
                  "default: port 24, read bufsize 1024kB, interval 1 second\n"
                  "suffix k for kilo, m for mega to speficy bufsize\n"
                  "If both -p port and ip_address:port are specified, ip_address:port port wins\n"
@@ -37,7 +37,10 @@ int usage(void)
                  "-q -q: enable quickack after connect() and before every read()\n"
                  "-r rcvbuf: set socket receive buffer size\n"
                  "-b bufsize: read() buffer size (default: 1024kB)\n"
-                 "-i sec: print interval (seconds. allow decimal)\n";
+                 "-i sec: print interval (seconds. allow decimal)\n"
+                 "-o file: out data to file\n"
+                 "-s sleep_usec: usleep(sleep_usec) in sigalrm routine\n";
+
     fprintf(stderr, "%s\n", msg);
 
     return 0;
@@ -73,9 +76,10 @@ int main(int argc, char *argv[])
     int enable_quickack = 0;
     char *interval_sec_str = "1.0";
     char *output = "";
+    int sleep_usec = 0;
 
     int c;
-    while ( (c = getopt(argc, argv, "c:dhi:o:Pp:qr:b:")) != -1) {
+    while ( (c = getopt(argc, argv, "c:dhi:o:Pp:qr:s:b:")) != -1) {
         switch (c) {
             case 'h':
                 usage();
@@ -104,6 +108,9 @@ int main(int argc, char *argv[])
                 break;
             case 'r':
                 rcvbuf = get_num(optarg);
+                break;
+            case 's':
+                sleep_usec = strtol(optarg, NULL, 0);
                 break;
             case 'b':
                 bufsize = get_num(optarg);
@@ -206,6 +213,9 @@ int main(int argc, char *argv[])
             interval_read_bytes = 0;
             interval_read_count = 0;
             prev = now;
+            if (sleep_usec > 0) {
+                usleep(sleep_usec);
+            }
         }
         if (has_int) {
             if (close(sockfd) < 0) {
