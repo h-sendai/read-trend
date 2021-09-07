@@ -218,6 +218,11 @@ int main(int argc, char *argv[])
             }
         }
         if (has_int) {
+            if (shutdown(sockfd, SHUT_RD) < 0) {
+                err(1, "shutdown");
+            }
+            // XXX
+            usleep(1000000);
             if (close(sockfd) < 0) {
                 err(1, "close");
             }
