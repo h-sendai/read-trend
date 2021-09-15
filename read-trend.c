@@ -16,6 +16,7 @@
 #include "set_timer.h"
 #include "set_cpu.h"
 #include "get_num.h"
+#include "logUtil.h"
 
 volatile sig_atomic_t has_alarm = 0;
 volatile sig_atomic_t has_int   = 0;
@@ -77,9 +78,10 @@ int main(int argc, char *argv[])
     char *interval_sec_str = "1.0";
     char *output = "";
     int sleep_usec = 0;
+    int use_shutdown = 0;
 
     int c;
-    while ( (c = getopt(argc, argv, "c:dhi:o:Pp:qr:s:b:")) != -1) {
+    while ( (c = getopt(argc, argv, "c:dhi:o:Pp:qr:s:b:S")) != -1) {
         switch (c) {
             case 'h':
                 usage();
@@ -114,6 +116,9 @@ int main(int argc, char *argv[])
                 break;
             case 'b':
                 bufsize = get_num(optarg);
+                break;
+            case 'S':
+                use_shutdown = 1;
                 break;
             default:
                 break;
@@ -218,14 +223,18 @@ int main(int argc, char *argv[])
             }
         }
         if (has_int) {
-            if (shutdown(sockfd, SHUT_RD) < 0) {
-                err(1, "shutdown");
+            /* stop alarm */
+            my_signal(SIGALRM, SIG_IGN);
+
+            if (use_shutdown) {
+                if (shutdown(sockfd, SHUT_WR) < 0) {
+                    err(1, "shutdown");
+                }
             }
-            // XXX
-            usleep(1000000);
             if (close(sockfd) < 0) {
                 err(1, "close");
             }
+
             struct timeval now, elapse;
             gettimeofday(&now, NULL);
             timersub(&now, &start, &elapse);
