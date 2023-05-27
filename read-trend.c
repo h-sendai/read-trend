@@ -225,6 +225,10 @@ int main(int argc, char *argv[])
         if (has_int) {
             /* stop alarm */
             my_signal(SIGALRM, SIG_IGN);
+            int last_so_rcvbuf = get_so_rcvbuf(sockfd);
+            if (last_so_rcvbuf < 0) {
+                errx(1, "get_so_rcvbuf");
+            }
 
             if (use_shutdown) {
                 if (shutdown(sockfd, SHUT_WR) < 0) {
@@ -241,8 +245,9 @@ int main(int argc, char *argv[])
             double run_time_sec = elapse.tv_sec + 0.000001*elapse.tv_usec;
             double transfer_rate_MB_s = total_bytes / run_time_sec / 1024.0 / 1024.0;
             double transfer_rate_Gb_s = MiB2Gb(transfer_rate_MB_s);
-            fprintf(stderr, "run_sec: %.3f seconds total_bytes: %ld bytes transfer_rate: %.3f MB/s %.3f Gbps\n",
-                run_time_sec, total_bytes, transfer_rate_MB_s, transfer_rate_Gb_s);
+            fprintf(stderr,
+                "run_sec: %.3f seconds total_bytes: %ld bytes transfer_rate: %.3f MB/s %.3f Gbps last_so_rcvbuf: %d bytes",
+                run_time_sec, total_bytes, transfer_rate_MB_s, transfer_rate_Gb_s, last_so_rcvbuf);
             exit(0);
         }
 
