@@ -1,3 +1,5 @@
+#define _GNU_SOURCE 1 /* for sched_getcpu() */
+
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -5,6 +7,7 @@
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sched.h> /* for sched_getcpu() */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,11 +28,12 @@ int debug = 0;
 
 int usage(void)
 {
-    char msg[] = "Usage: ./read-trend [-c cpu_num] [-d] [-P] [-p port] [-q] [-q ...] [-r rcvbuf] [-b bufsize] [-i interval] [-o output_file] [-s sleep_usec] ip_address[:port]\n"
+    char msg[] = "Usage: ./read-trend [-C] [-c cpu_num] [-d] [-P] [-p port] [-q] [-q ...] [-r rcvbuf] [-b bufsize] [-i interval] [-o output_file] [-s sleep_usec] ip_address[:port]\n"
                  "default: port 24, read bufsize 1024kB, interval 1 second\n"
                  "suffix k for kilo, m for mega to speficy bufsize\n"
                  "If both -p port and ip_address:port are specified, ip_address:port port wins\n"
                  "Options\n"
+                 "-C: print if running cpu has changed\n"
                  "-c cpu_num: set cpu number to be run\n"
                  "-d debug\n"
                  "-P: print pid\n"
@@ -74,6 +78,8 @@ int main(int argc, char *argv[])
     int port     = 24;
     char *buf    = NULL;
     int cpu_num  = -1;
+    int run_cpu_prev  = -1;
+    int get_cpu_affinity = 0;
     int enable_quickack = 0;
     char *interval_sec_str = "1.0";
     char *output = "";
@@ -81,7 +87,7 @@ int main(int argc, char *argv[])
     int use_shutdown = 0;
 
     int c;
-    while ( (c = getopt(argc, argv, "c:dhi:o:Pp:qr:s:b:S")) != -1) {
+    while ( (c = getopt(argc, argv, "c:dhi:o:Pp:qr:s:b:CS")) != -1) {
         switch (c) {
             case 'h':
                 usage();
@@ -119,6 +125,9 @@ int main(int argc, char *argv[])
                 break;
             case 'S':
                 use_shutdown = 1;
+                break;
+            case 'C':
+                get_cpu_affinity = 1;
                 break;
             default:
                 break;
@@ -199,6 +208,10 @@ int main(int argc, char *argv[])
     gettimeofday(&start, NULL);
     prev = start;
 
+    if (get_cpu_affinity) {
+        run_cpu_prev = sched_getcpu();
+        printf("0.000000 CPU: %d\n", run_cpu_prev);
+    }
     for ( ; ; ) {
         if (has_alarm) {
             has_alarm = 0;
@@ -281,6 +294,17 @@ int main(int argc, char *argv[])
                     fprintf(stderr, "unknown error for fwrite\n");
                     exit(0);
                 }
+            }
+        }
+        
+        if (get_cpu_affinity) {
+            int run_cpu = sched_getcpu();
+            if (run_cpu != run_cpu_prev) {
+                struct timeval now, elapse;
+                gettimeofday(&now, NULL);
+                timersub(&now, &start, &elapse);
+                printf("%ld.%06ld CPU: %d\n", elapse.tv_sec, elapse.tv_usec, run_cpu);
+                run_cpu_prev = run_cpu;
             }
         }
     }
