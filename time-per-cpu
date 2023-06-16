@@ -1,0 +1,63 @@
+#!/usr/bin/python3
+
+# read-trend -Cの出力をgrep CPUしたファイル
+# 0.000000 CPU: 4
+# 0.653847 CPU: 1 total_read_count: 53473
+# 0.655346 CPU: 2 total_read_count: 53595
+# 2.829950 CPU: 1 total_read_count: 235003
+# 2.831043 CPU: 2 total_read_count: 235090
+# :
+# から各CPUでの走行時間を集計するスクリプト
+# 最後で長く一つのCPUで動作すると合計時間は
+# read-trendの総稼働時間にならないがだいたいの
+# 傾向はわかる。
+# 出力例のまとめ
+# read-trend -b 16k, 32k ... 256kで100秒間
+# 走らせたときのCPUコア毎の走行時間
+# packetはqueue #1にはいるようにethtool -Uで
+# 設定してある。read-trendはtasksetなどでの
+# CPUピンニングはしていない。
+#C    16k    32k    64k   128k   256k
+#-  ----- ----- ------- ------ ------
+#0  4.398  2.008 12.464  5.247 11.124
+#1  0.079  0.094  1.134  2.040  1.251
+#2 83.065 50.973 71.824 82.122 75.043
+#3  8.004 43.987  5.431  4.182  4.845
+#4  1.109  0.000  2.529  1.147  1.141
+#5  0.000  0.000  0.306  1.346  0.337
+#6  0.000  0.000  1.715  0.731  1.521
+#7  0.000  3.038  4.475  3.010  4.514
+
+import os, sys, time
+
+run_time = dict()
+
+def calculate_run_time(first, second):
+    e = first.split()
+    t_1 = float(e[0])
+    cpu = int(e[2])
+    t_2 = float(second.split()[0])
+    run_time[cpu] += t_2 - t_1
+
+def main():
+    if len(sys.argv) != 3:
+        print('Usage: n_cpu data')
+        sys.exit(1)
+    n_proc = int(sys.argv[1])
+    file   = sys.argv[2]
+    
+    for i in range(n_proc):
+        run_time[i] = 0.0
+
+    f = open(file, 'r')
+    first = f.readline().strip()
+    for line in f:
+        second = line.strip()
+        calculate_run_time(first, second)
+        first = second
+
+    for i in range(n_proc):
+        print(i, '%.3f' % (run_time[i]))
+
+if __name__ == '__main__':
+    main()
