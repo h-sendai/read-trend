@@ -260,7 +260,7 @@ int main(int argc, char *argv[])
             double transfer_rate_MB_s = total_bytes / run_time_sec / 1024.0 / 1024.0;
             double transfer_rate_Gb_s = MiB2Gb(transfer_rate_MB_s);
             fprintf(stderr,
-                "run_sec: %.3f seconds total_bytes: %ld bytes transfer_rate: %.3f MB/s %.3f Gbps last_so_rcvbuf: %d bytes\n",
+                "# run_sec: %.3f seconds total_bytes: %ld bytes transfer_rate: %.3f MB/s %.3f Gbps last_so_rcvbuf: %d bytes\n",
                 run_time_sec, total_bytes, transfer_rate_MB_s, transfer_rate_Gb_s, last_so_rcvbuf);
             exit(0);
         }
