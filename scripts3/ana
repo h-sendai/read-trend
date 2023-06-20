@@ -1,0 +1,22 @@
+#!/bin/zsh
+
+# log.16k log.32kなどログが並んでいるところで実行
+# 最後は
+#0  86.983  0.508   36.062  27.822  31.688
+#1  12.586  0.011   12.204  7.413   7.737
+#2  0.000   94.309  6.793   3.233   4.404
+#3  0.082   3.683   0.699   4.399   2.075
+#4  0.022   0.432   32.784  1.044   1.593
+#5  0.311   0.017   5.379   0.583   3.223
+#6  0.000   0.289   1.042   45.981  0.911
+#7  0.025   0.430   4.834   9.503   48.443
+# のような結果になる
+
+for i in log.*; do
+    grep CPU $i > cpu.$i:s/log.//
+done
+for i in log.*; do
+    ../../time-per-cpu 8 cpu.$i:s/log.// > time.$i:s/log.// 
+done
+
+paste time.16k =(cprint 2 time.32k) =(cprint 2 time.64k) =(cprint 2 time.128k) =(cprint 2 time.256k) | expand -4 | column -t > time.result
