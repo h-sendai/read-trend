@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "my_port: %d\n", my_port);
     }
     if (enable_quickack) {
-        set_so_quickack(sockfd);
+        set_so_quickack(sockfd, 1);
     }
 
     long interval_read_bytes = 0;
@@ -266,7 +266,7 @@ int main(int argc, char *argv[])
         }
 
         if (enable_quickack > 1) {
-            set_so_quickack(sockfd);
+            set_so_quickack(sockfd, 1);
         }
 
         int n = read(sockfd, buf, bufsize);
