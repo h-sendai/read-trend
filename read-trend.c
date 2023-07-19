@@ -281,6 +281,10 @@ int main(int argc, char *argv[])
                 err(1, "read socket");
             }
         }
+        if (n == 0) {
+            exit(0);
+        }
+
         interval_read_bytes += n;
         total_bytes         += n;
         interval_read_count ++;
