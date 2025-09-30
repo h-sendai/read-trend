@@ -45,7 +45,7 @@ int usage(void)
                  "-b bufsize: read() buffer size (default: 1024kB)\n"
                  "-i sec: print interval (seconds. allow decimal)\n"
                  "-o file: out data to file\n"
-                 "-s sleep_usec: usleep(sleep_usec) in sigalrm routine\n"
+                 "-s sleep_usec: usleep(sleep_usec) in sigalrm routine\n";
 
     fprintf(stderr, "%s\n", msg);
 
