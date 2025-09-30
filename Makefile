@@ -1,6 +1,6 @@
 PROG = read-trend
 CFLAGS += -g -O2 -Wall
-CFLAGS += -std=gnu99
+CFLAGS += -std=gnu17
 # CFLAGS += -pthread
 # LDLIBS += -L/usr/local/lib -lmylib
 # LDLIBS += -lrt
@@ -14,6 +14,8 @@ OBJS += get_num.o
 OBJS += set_timer.o
 OBJS += set_cpu.o
 OBJS += logUtil.o
+OBJS += readn.o
+
 $(PROG): $(OBJS)
 
 clean:

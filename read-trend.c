@@ -20,6 +20,7 @@
 #include "set_cpu.h"
 #include "get_num.h"
 #include "logUtil.h"
+#include "readn.h"
 
 volatile sig_atomic_t has_alarm = 0;
 volatile sig_atomic_t has_int   = 0;
@@ -44,7 +45,7 @@ int usage(void)
                  "-b bufsize: read() buffer size (default: 1024kB)\n"
                  "-i sec: print interval (seconds. allow decimal)\n"
                  "-o file: out data to file\n"
-                 "-s sleep_usec: usleep(sleep_usec) in sigalrm routine\n";
+                 "-s sleep_usec: usleep(sleep_usec) in sigalrm routine\n"
 
     fprintf(stderr, "%s\n", msg);
 
@@ -73,21 +74,22 @@ int print_pid()
 
 int main(int argc, char *argv[])
 {
-    int rcvbuf   = 0;
-    int bufsize  = 1*1024*1024;
-    int port     = 24;
-    char *buf    = NULL;
-    int cpu_num  = -1;
-    int run_cpu_prev  = -1;
-    int get_cpu_affinity = 0;
-    int enable_quickack = 0;
+    int rcvbuf             = 0;
+    int bufsize            = 1*1024*1024;
+    int port               = 24;
+    char *buf              = NULL;
+    int cpu_num            = -1;
+    int run_cpu_prev       = -1;
+    int get_cpu_affinity   = 0;
+    int enable_quickack    = 0;
     char *interval_sec_str = "1.0";
-    char *output = "";
-    int sleep_usec = 0;
-    int use_shutdown = 0;
+    char *output           = "";
+    int sleep_usec         = 0;
+    int use_shutdown       = 0;
+    int use_readn          = 0;
 
     int c;
-    while ( (c = getopt(argc, argv, "c:dhi:o:Pp:qr:s:b:CS")) != -1) {
+    while ( (c = getopt(argc, argv, "c:dhi:o:Pp:qr:s:b:CSn")) != -1) {
         switch (c) {
             case 'h':
                 usage();
@@ -128,6 +130,9 @@ int main(int argc, char *argv[])
                 break;
             case 'C':
                 get_cpu_affinity = 1;
+                break;
+            case 'n':
+                use_readn = 1;
                 break;
             default:
                 break;
@@ -269,7 +274,13 @@ int main(int argc, char *argv[])
             set_so_quickack(sockfd, 1);
         }
 
-        int n = read(sockfd, buf, bufsize);
+        int n;
+        if (use_readn) {
+            n = readn(sockfd, buf, bufsize);
+        }
+        else {
+            n = read(sockfd, buf, bufsize);
+        }
         if (n < 0) {
             if (errno == EINTR) {
                 if (debug) {
